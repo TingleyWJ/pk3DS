@@ -144,8 +144,10 @@ namespace pk3DS.Core
             new(017, "personal"),
             new(019, "item"),
 
+
             new(077, "zonedata"),
             new(091, "worlddata"),
+            new(094, "models"),
 
             new(105, "trclass"),
             new(106, "trdata"),
