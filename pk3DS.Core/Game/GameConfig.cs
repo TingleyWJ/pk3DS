@@ -4,6 +4,7 @@ using System.Linq;
 using pk3DS.Core.CTR;
 using pk3DS.Core.Structures.PersonalInfo;
 using pk3DS.Core.Structures;
+using System.Collections.Generic;
 
 namespace pk3DS.Core
 {
@@ -127,32 +128,43 @@ namespace pk3DS.Core
             InitializeGameInfo();
             // Don't uncomment this bit of code unless you know exactly what you're doing.
             // TODO Integrate this into the UI
-            //EditModelMasterTable();
+
+
+            //Uncomment & enter index numbers of edited base formes the below list
+            /*List<int> new_model_base_forme_indices = new List<int> { 1, 2, 3, 4, 5 };
+
+            foreach (var item in new_model_base_forme_indices)
+            {
+                EditModelMasterTable(item);
+            }*/
         }
 
-        public void EditModelMasterTable()
+        public void EditModelMasterTable(int pokemonIndex)
         {
             GARCFile ModelFile = GetGARCData("models");
             byte[] MasterTable = ModelFile.Files[0];
             int dataLength = 0xB48;
             byte[] LimitedMT = new byte[dataLength];
             Array.Copy(MasterTable, 0, LimitedMT, 0, dataLength);
-            //Console.WriteLine($"{BitConverter.ToString(MasterTable)}");
+            Console.WriteLine($"{BitConverter.ToString(MasterTable)}");
             int size = 0x4;
             byte[][] splitTable = PersonalTable.SplitBytes(LimitedMT, size);
 
-            /*for (int i = 0; i < splitTable.Length; i++)
+            for (int i = 0; i < splitTable.Length; i++)
             {
                 Console.WriteLine($"Model[{i}]: {BitConverter.ToString(splitTable[i])}");
-            }*/
+            }
 
             //edit pokemon's counts
-            int pokemonIndex = 384;
             int modelIndex = -1;
-            //form count
-            splitTable[pokemonIndex - 1][2] = 0x2;
+            //form count, just do a plus-equal, for now just run Pokemon with more than 1 forme added through a second time. This avoids one set of accidental problems by substituting another (over-adding)
+            splitTable[pokemonIndex - 1][2] += 0x1;
             //identifier, 0x1 = no extra forms, 0x3 = gender forms, 0x5 = non-gender forms, 0x7 = both gender and non-gender forms
-            splitTable[pokemonIndex - 1][3] = 0x5;
+            //If splitTable[pokemonIndex - 1][3] is at least 0x5, it is already where we want, so don't modify. Otherwise it is 0x1 or 0x3, and we want to add 0x4 to get to 0x5 or 0x7, respectively.
+            if splitTable[pokemonIndex - 1][3] < 0x5)
+            {
+                Math.Max(splitTable[pokemonIndex - 1][3]) += 0x04;
+            }
 
             int modelCount = 0;
             for (int i = 0; i < splitTable.Length; i++)
