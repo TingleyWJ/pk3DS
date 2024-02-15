@@ -75,6 +75,7 @@ namespace pk3DS.Core
             new(193, "megaevo"),
             new(195, "personal"),
             new(197, "item"),
+            new(008, "models"),
 
             // Varied
             new(071, "gametext", true),

@@ -22,6 +22,7 @@ namespace pk3DS.Core
         public TextVariableCode[] Variables { get; private set; }
         public TextReference[] GameText { get; private set; }
         public GameInfo Info { get; private set; }
+        public int model_pointer_data_Length = 0x0;
 
         /// <summary>
         /// Whether or not to remap characters in text files to proper unicode. Defaults to false.
@@ -74,6 +75,8 @@ namespace pk3DS.Core
                     Files = GARCReference.GARCReference_XY;
                     Variables = TextVariableCode.VariableCodes_XY;
                     GameText = TextReference.GameText_XY;
+                    //set model pointer data length automatically
+                    model_pointer_data_Length = 0xB48;
                     break;
 
                 case GameVersion.ORASDEMO:
@@ -81,6 +84,8 @@ namespace pk3DS.Core
                     Files = GARCReference.GARCReference_AO;
                     Variables = TextVariableCode.VariableCodes_AO;
                     GameText = TextReference.GameText_AO;
+                    //same for ORAS
+                    model_pointer_data_Length = 0xB48;
                     break;
 
                 case GameVersion.SMDEMO:
@@ -105,6 +110,8 @@ namespace pk3DS.Core
                         Files = GARCReference.GARCReference_UM;
                     Variables = TextVariableCode.VariableCodes_SM;
                     GameText = TextReference.GameText_USUM;
+                    //USUM different than SM because new Pokemon, not just new Formes
+                    model_pointer_data_Length = 0xCA0;
                     break;
             }
         }
@@ -131,7 +138,7 @@ namespace pk3DS.Core
 
 
             //Uncomment & enter index numbers of edited base formes the below list
-            /*List<int> new_model_base_forme_indices = new List<int> { 1, 2, 3, 4, 5 };
+            /*List<int> new_model_base_forme_indices = new List<int> { 497 };
 
             foreach (var item in new_model_base_forme_indices)
             {
@@ -143,9 +150,10 @@ namespace pk3DS.Core
         {
             GARCFile ModelFile = GetGARCData("models");
             byte[] MasterTable = ModelFile.Files[0];
-            int dataLength = 0xB48;
-            byte[] LimitedMT = new byte[dataLength];
-            Array.Copy(MasterTable, 0, LimitedMT, 0, dataLength);
+
+
+            byte[] LimitedMT = new byte[model_pointer_data_Length];
+            Array.Copy(MasterTable, 0, LimitedMT, 0, model_pointer_data_Length);
             Console.WriteLine($"{BitConverter.ToString(MasterTable)}");
             int size = 0x4;
             byte[][] splitTable = PersonalTable.SplitBytes(LimitedMT, size);
@@ -161,9 +169,9 @@ namespace pk3DS.Core
             splitTable[pokemonIndex - 1][2] += 0x1;
             //identifier, 0x1 = no extra forms, 0x3 = gender forms, 0x5 = non-gender forms, 0x7 = both gender and non-gender forms
             //If splitTable[pokemonIndex - 1][3] is at least 0x5, it is already where we want, so don't modify. Otherwise it is 0x1 or 0x3, and we want to add 0x4 to get to 0x5 or 0x7, respectively.
-            if splitTable[pokemonIndex - 1][3] < 0x5)
+            if (splitTable[pokemonIndex - 1][3] < 0x5)
             {
-                Math.Max(splitTable[pokemonIndex - 1][3]) += 0x04;
+                splitTable[pokemonIndex - 1][3] += 0x04;
             }
 
             int modelCount = 0;
@@ -184,11 +192,11 @@ namespace pk3DS.Core
             }*/
 
             LimitedMT = splitTable.SelectMany(x => x).ToArray();
-            Array.Copy(LimitedMT, 0, MasterTable, 0, dataLength);
+            Array.Copy(LimitedMT, 0, MasterTable, 0, model_pointer_data_Length);
 
             //Console.WriteLine($"modelcount: {modelCount}, mc * 2 - 2: {modelCount * 2 - 2}");
             byte[] backhalfMT = new byte[modelCount * 2 - 2];
-            Array.Copy(MasterTable, dataLength, backhalfMT, 0, modelCount * 2 - 2);
+            Array.Copy(MasterTable, model_pointer_data_Length, backhalfMT, 0, modelCount * 2 - 2);
             //int backSize = 0x2;
             //byte[][] splitBack = PersonalTable.SplitBytes(backhalfMT, backSize);
 
@@ -213,8 +221,8 @@ namespace pk3DS.Core
             //Console.WriteLine($"First: {BitConverter.ToString(backhalfMT)}");
             //Console.WriteLine($"Rewrt: {BitConverter.ToString(rewriteBackMT)}");
 
-            Array.Resize(ref MasterTable, dataLength + modelCount * 2);
-            Array.Copy(rewriteBackMT, 0, MasterTable, dataLength, modelCount * 2);
+            Array.Resize(ref MasterTable, model_pointer_data_Length + modelCount * 2);
+            Array.Copy(rewriteBackMT, 0, MasterTable, model_pointer_data_Length, modelCount * 2);
 
             //Console.WriteLine($"Full Table: {BitConverter.ToString(MasterTable)}");
 
