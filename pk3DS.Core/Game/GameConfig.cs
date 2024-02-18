@@ -133,17 +133,44 @@ namespace pk3DS.Core
             InitializeMoves();
             InitializeEvos();
             InitializeGameInfo();
-            // Don't uncomment this bit of code unless you know exactly what you're doing.
-            // TODO Integrate this into the UI
 
+            //initialize array to stick read index numbers in
+            string[] new_model_base_forme_indices_text = Array.Empty<string>();
+            int[] new_model_base_forme_indices = Array.Empty<int>();
 
-            //Uncomment & enter index numbers of edited base formes the below list
-            /*List<int> new_model_base_forme_indices = new List<int> { 497 };
+            //text file names "changed_indices.txt" in the same directory as the built .exe
+            var base_indices_path = Path.Combine(Directory.GetCurrentDirectory(), "changed_indices.txt");
 
-            foreach (var item in new_model_base_forme_indices)
+            //to skip everything below if file not found or file empty
+            bool no_indices = false;
+            
+            //checks if file with list of indices exists
+            if (File.Exists(base_indices_path))
             {
-                EditModelMasterTable(item);
-            }*/
+                //try to read the file
+                try
+                {
+                    //grabs each line as a string (so put each index you want to change on a different line)
+                    new_model_base_forme_indices_text = File.ReadAllLines(base_indices_path);
+                }
+                catch
+                {
+                    no_indices = true;
+                }
+            }
+
+            if (!no_indices)
+            {
+                //Convert strings read from file into integers
+                new_model_base_forme_indices = Array.ConvertAll(new_model_base_forme_indices_text, int.Parse);
+
+                //Do the edits for each index number. This implementation is MUCH less computation-efficient than doing loops inside EditModelMasterTable,
+                //but it's not a lot and I don't understand what it's doing well enough to willingly much around with it.
+                foreach (var item in new_model_base_forme_indices)
+                {
+                    EditModelMasterTable(item);
+                }
+            }
         }
 
         public void EditModelMasterTable(int pokemonIndex)
@@ -154,14 +181,14 @@ namespace pk3DS.Core
 
             byte[] LimitedMT = new byte[model_pointer_data_Length];
             Array.Copy(MasterTable, 0, LimitedMT, 0, model_pointer_data_Length);
-            Console.WriteLine($"{BitConverter.ToString(MasterTable)}");
+            //Console.WriteLine($"{BitConverter.ToString(MasterTable)}");
             int size = 0x4;
             byte[][] splitTable = PersonalTable.SplitBytes(LimitedMT, size);
 
-            for (int i = 0; i < splitTable.Length; i++)
+            /*for (int i = 0; i < splitTable.Length; i++)
             {
                 Console.WriteLine($"Model[{i}]: {BitConverter.ToString(splitTable[i])}");
-            }
+            }*/
 
             //edit pokemon's counts
             int modelIndex = -1;
