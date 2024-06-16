@@ -145,7 +145,7 @@ namespace pk3DS.Core
             bool no_indices = false;
             
             //checks if file with list of indices exists
-            if (File.Exists(base_indices_path))
+            /*if (File.Exists(base_indices_path))
             {
                 //try to read the file
                 try
@@ -170,7 +170,7 @@ namespace pk3DS.Core
                 {
                     EditModelMasterTable(item);
                 }
-            }
+            }*/
         }
 
         public void EditModelMasterTable(int pokemonIndex)
