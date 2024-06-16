@@ -76,7 +76,7 @@ namespace pk3DS.Core
                     Variables = TextVariableCode.VariableCodes_XY;
                     GameText = TextReference.GameText_XY;
                     //set model pointer data length automatically
-                    model_pointer_data_Length = 0xB48;
+                    //model_pointer_data_Length = 0xB48;
                     break;
 
                 case GameVersion.ORASDEMO:
@@ -85,7 +85,7 @@ namespace pk3DS.Core
                     Variables = TextVariableCode.VariableCodes_AO;
                     GameText = TextReference.GameText_AO;
                     //same for ORAS
-                    model_pointer_data_Length = 0xB48;
+                    //model_pointer_data_Length = 0xB48;
                     break;
 
                 case GameVersion.SMDEMO:
@@ -111,7 +111,7 @@ namespace pk3DS.Core
                     Variables = TextVariableCode.VariableCodes_SM;
                     GameText = TextReference.GameText_USUM;
                     //USUM different than SM because new Pokemon, not just new Formes
-                    model_pointer_data_Length = 0xCA0;
+                    //model_pointer_data_Length = 0xCA0;
                     break;
             }
         }
@@ -135,14 +135,14 @@ namespace pk3DS.Core
             InitializeGameInfo();
 
             //initialize array to stick read index numbers in
-            string[] new_model_base_forme_indices_text = Array.Empty<string>();
-            int[] new_model_base_forme_indices = Array.Empty<int>();
+            //string[] new_model_base_forme_indices_text = Array.Empty<string>();
+            //int[] new_model_base_forme_indices = Array.Empty<int>();
 
             //text file names "changed_indices.txt" in the same directory as the built .exe
-            var base_indices_path = Path.Combine(Directory.GetCurrentDirectory(), "changed_indices.txt");
+            //var base_indices_path = Path.Combine(Directory.GetCurrentDirectory(), "changed_indices.txt");
 
             //to skip everything below if file not found or file empty
-            bool no_indices = false;
+            //bool no_indices = false;
             
             //checks if file with list of indices exists
             /*if (File.Exists(base_indices_path))
@@ -172,7 +172,7 @@ namespace pk3DS.Core
                 }
             }*/
         }
-
+        /*
         public void EditModelMasterTable(int pokemonIndex)
         {
             GARCFile ModelFile = GetGARCData("models");
@@ -185,10 +185,10 @@ namespace pk3DS.Core
             int size = 0x4;
             byte[][] splitTable = PersonalTable.SplitBytes(LimitedMT, size);
 
-            /*for (int i = 0; i < splitTable.Length; i++)
-            {
+           // for (int i = 0; i < splitTable.Length; i++)
+           // {
                 Console.WriteLine($"Model[{i}]: {BitConverter.ToString(splitTable[i])}");
-            }*/
+          //  }
 
             //edit pokemon's counts
             int modelIndex = -1;
@@ -213,10 +213,10 @@ namespace pk3DS.Core
                 modelCount += splitTable[i][2];
             }
 
-            /*for (int i = 0; i < splitTable.Length; i++)
-            {
+            //for (int i = 0; i < splitTable.Length; i++)
+           // {
                 Console.WriteLine($"Model[{i}]: {BitConverter.ToString(splitTable[i])}");
-            }*/
+           // }
 
             LimitedMT = splitTable.SelectMany(x => x).ToArray();
             Array.Copy(LimitedMT, 0, MasterTable, 0, model_pointer_data_Length);
@@ -260,7 +260,7 @@ namespace pk3DS.Core
             //Console.WriteLine($"Full Table Again: {BitConverter.ToString(ModelFile.Files[0])}");
             ModelFile.Save();
         }
-
+        */
         public void InitializePersonal()
         {
             GARCPersonal = GetGARCData("personal");
