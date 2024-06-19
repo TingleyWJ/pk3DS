@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace pk3DS.Core.Structures.AXExports
 {
@@ -12,6 +13,8 @@ namespace pk3DS.Core.Structures.AXExports
         public string Ability2 { get; set; }
         public string AbilityH { get; set; }
         public Dictionary<string, int> BaseStats { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string HeldItem { get; set; }
         public int CatchRate { get; set; }
         public int BaseXP { get; set; }
         public string GrowthRate { get; set; }
@@ -46,14 +49,30 @@ namespace pk3DS.Core.Structures.AXExports
 
     public class ExportTrSite
     {
-        public List<ExportTrPkmSite> Pokemon { get; set; } = new();
+		public string TrainerName { get; set; }
+		public int TrainerID { get; set; }
+		public string TrainerClass { get; set; }
+		public int TrainerClassIndex { get; set; }
+		public string BattleType { get; set; }
+		public string Route { get; set; }
+		public int EncounterIndex { get; set; }
+		public string Required { get; set; }
+		public string Notes { get; set; }
+		public bool IsTagBattle { get; set; }
+		public List<ExportTrPkmSite> Pokemon { get; set; } = new();
 
-        public int TrainerID { get; set; }
-        public string TrainerClass { get; set; }
-        public string BattleType { get; set; }
-
-        public ExportTrSite() { }
+		public ExportTrSite() { }
     }
+
+	public class ExportRouteSite
+	{
+		public int RouteIndex { get; set; }
+		public bool Required { get; set; }
+		public string Notes { get; set; }
+		public List<ExportTrSite> Trainers { get; set; } = new();
+
+		public ExportRouteSite() { }
+	}
 
     // Level Up Moves
     public class ExportLevelUpMoveSite

@@ -312,7 +312,7 @@ namespace pk3DS
                             if (evolvePkmName == "Darmanitan")
                                 evo.EvolvesInto.Add(evolvePkmName + "-Zen", method);
                             else if (evolvePkmName == "Meowstic")
-                                evo.EvolvesInto.Add(evolvePkmName + "-Female", method);
+                                evo.EvolvesInto.Add(evolvePkmName + "-F", method);
                             else
                                 throw new Exception("Attempting to place a duplicate key for an unexpected form evolution.");
                         }
@@ -329,17 +329,14 @@ namespace pk3DS
                         }
                         catch (ArgumentException)
                         {
-                            /*evoDict[evolvePkmName].EvolvesFrom = fromEvo.EvolvesFrom;
-                            evoDict[evolvePkmName].FromMethod = fromEvo.FromMethod;*/
                             if (evolvePkmName == "Darmanitan")
                                 evoDict.Add(evolvePkmName + "-Zen", fromEvo);
                             else if (evolvePkmName == "Meowstic")
-                                evoDict.Add(evolvePkmName + "-Female", fromEvo);
+                                evoDict.Add(evolvePkmName + "-F", fromEvo);
                             else
                             {
                                 evoDict[evolvePkmName].EvolvesFrom = fromEvo.EvolvesFrom;
                                 evoDict[evolvePkmName].FromMethod = fromEvo.FromMethod;
-                                //throw new Exception("Attempting to place a duplicate key for an unexpected form evolution.");
                             }
                         }
                     }

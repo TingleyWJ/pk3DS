@@ -6,6 +6,7 @@ using System.Linq;
 using System.Media;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pk3DS.Core;
@@ -989,6 +990,38 @@ namespace pk3DS
 
                 string trShortenedName = CB_TrainerID.Text.Substring(0, CB_TrainerID.Text.Length - 6);
 
+                bool foundTag = false;
+                string trainerName1 = "", trainerName2 = "";
+                for (int j = 0; j < AXHelpers.AXTagTrainerIndexes.Length; j++)
+                {
+                    Tuple<int, int, int> tagIndices = AXHelpers.AXTagTrainerIndexes[j];
+
+                    if (CB_TrainerID.SelectedIndex == tagIndices.Item1)
+                    {
+                        foundTag = true;
+                        trainerName1 = trShortenedName;
+                        int originalIndex = CB_TrainerID.SelectedIndex;
+                        CB_TrainerID.SelectedIndex = tagIndices.Item2;
+                        trainerName2 = CB_TrainerID.Text.Substring(0, CB_TrainerID.Text.Length - 6);
+                        CB_TrainerID.SelectedIndex = originalIndex;
+                    }
+                    else if (CB_TrainerID.SelectedIndex == tagIndices.Item2)
+                    {
+                        foundTag = true;
+                        trainerName2 = trShortenedName;
+                        int originalIndex = CB_TrainerID.SelectedIndex;
+                        CB_TrainerID.SelectedIndex = tagIndices.Item1;
+                        trainerName1 = CB_TrainerID.Text.Substring(0, CB_TrainerID.Text.Length - 6);
+                        CB_TrainerID.SelectedIndex = originalIndex;
+                    }
+
+                    if (foundTag)
+                    {
+                        trShortenedName = $"{trainerName1} & {trainerName2} {tagIndices.Item3}";
+                        break;
+                    }
+                }
+
                 if (!trainerAppearanceIndexes.ContainsKey(trShortenedName))
                 {
                     trainerAppearanceIndexes.Add(trShortenedName, 0);
@@ -996,24 +1029,24 @@ namespace pk3DS
                     if (trShortenedName == "Serena" ||
                         trShortenedName == "Calem")
                     {
-                        trShortenedName += " " + trainerAppearanceIndexes[trShortenedName] + "-" + (rivalIdx + 1);
+                        trShortenedName += $" {trainerAppearanceIndexes[trShortenedName]}-{rivalIdx + 1}";
                         rivalIdx++;
                     }
                 }
                 else if (trShortenedName == "Serena" ||
-                         trShortenedName == "Calem")
+                            trShortenedName == "Calem")
                 {
                     string oldShortName = trShortenedName;
-                    trShortenedName += " " + trainerAppearanceIndexes[trShortenedName] + "-" + (rivalIdx + 1);
+                    trShortenedName += $" {trainerAppearanceIndexes[trShortenedName]}-{rivalIdx + 1}";
 
                     rivalIdx++;
                     if (rivalIdx == 3)
                         trainerAppearanceIndexes[oldShortName]++;
                     rivalIdx %= 3;
                 }
-                else
+                else if (!foundTag)
                 {
-                    trShortenedName += " " + ++trainerAppearanceIndexes[trShortenedName];
+                    trShortenedName += $" {++trainerAppearanceIndexes[trShortenedName]}";
                 }
 
                 for (int j = 0; j < exportData.Length; j++)
@@ -1030,15 +1063,15 @@ namespace pk3DS
                         Level = trpk_lvl[j].SelectedIndex,
                         Form = trpk_form[j].SelectedIndex,
                         Gender = trpk_gender[j].SelectedIndex == 0 ? "" : (trpk_gender[j].SelectedIndex == 1 ? "M" : "F"),
-                        HeldItem = trpk_item[j].Text != "" ? trpk_item[j].Text : "-",
+                        HeldItem = (trpk_item[j].Text != "" ? trpk_item[j].Text : "-").Replace("’", "'"),
                         Nature = trpk_nature[j].Text.Substring(0, trpk_nature[j].Text.IndexOf("(") - 1),
                         Ability = trpk_abil[j].Text.Substring(0, trpk_abil[j].Text.IndexOf("(") - 1)
                     };
 
-                    exportData[j].Moves[0] = trpk_m1[j].Text;
-                    exportData[j].Moves[1] = trpk_m2[j].Text;
-                    exportData[j].Moves[2] = trpk_m3[j].Text;
-                    exportData[j].Moves[3] = trpk_m4[j].Text;
+                    exportData[j].Moves[0] = trpk_m1[j].Text.Replace("’", "'");
+                    exportData[j].Moves[1] = trpk_m2[j].Text.Replace("’", "'");
+                    exportData[j].Moves[2] = trpk_m3[j].Text.Replace("’", "'");
+                    exportData[j].Moves[3] = trpk_m4[j].Text.Replace("’", "'");
 
                     int calculatedIV = trpk_IV[j].SelectedIndex & 0x1F;
                     exportData[j].IVs.Add("hp", calculatedIV);
@@ -1052,34 +1085,53 @@ namespace pk3DS
 
                     if (pkmName == "Aegislash")
                     {
-                        pkmName = AXHelpers.AXPokemonFormNames[pkmName];
+                        pkmName = "Aegislash-Shield";
                     }
                     else if (exportData[j].Form > 0)
                     {
-                        string pkmFormName = pkmName + " " + exportData[j].Form;
-                        if (AXHelpers.AXPokemonFormNames.ContainsKey(pkmFormName))
-                            pkmName = AXHelpers.AXPokemonFormNames[pkmFormName];
+                        string pkmFormName = $"{pkmName} {exportData[j].Form}";
+                        if (AXHelpers.AXPokemonFormNamesSite.TryGetValue(pkmFormName, out string value))
+                            pkmName = value;
                     }
-                    else if (exportData[j].HeldItem == "Megite X" ||
-                             exportData[j].HeldItem == "Megite Y")
+                    else if (exportData[j].HeldItem == "Megite X")
                     {
-                        int formIndex = 1;
                         if (pkmName == "Charizard" || pkmName == "Mewtwo")
-                        {
-                            if (exportData[j].HeldItem == "Megite X")
-                                pkmName += "-Mega-X";
-                            else
-                            {
-                                pkmName += "-Mega-Y";
-                                formIndex = 2;
-                            }
-                        }
+                            pkmName += "-Mega-X";
                         else
-                        {
                             pkmName += "-Mega";
-                        }
 
-                        int entry = Main.Config.Personal.GetFormIndex(trpk_pkm[j].SelectedIndex, trpk_form[j].SelectedIndex + formIndex);
+                        int entry = Main.Config.Personal.GetFormIndex(trpk_pkm[j].SelectedIndex, trpk_form[j].SelectedIndex + 1);
+                        exportData[j].Ability = abilitylist[Main.SpeciesStat[entry].Abilities[0]];
+                    }
+                    else if (exportData[j].HeldItem == "Megite Y")
+                    {
+                        if (pkmName == "Charizard" || pkmName == "Mewtwo")
+                            pkmName += "-Mega-Y";
+                        else
+                            pkmName += "-Mega";
+
+                        int entry = Main.Config.Personal.GetFormIndex(trpk_pkm[j].SelectedIndex, trpk_form[j].SelectedIndex + 2);
+                        exportData[j].Ability = abilitylist[Main.SpeciesStat[entry].Abilities[0]];
+                    }
+                    else if (exportData[j].HeldItem == "Fire Stone")
+                    {
+                        pkmName += "-Sunny";
+
+                        int entry = Main.Config.Personal.GetFormIndex(trpk_pkm[j].SelectedIndex, trpk_form[j].SelectedIndex + 1);
+                        exportData[j].Ability = abilitylist[Main.SpeciesStat[entry].Abilities[0]];
+                    }
+                    else if (exportData[j].HeldItem == "Water Stone")
+                    {
+                        pkmName += "-Rainy";
+
+                        int entry = Main.Config.Personal.GetFormIndex(trpk_pkm[j].SelectedIndex, trpk_form[j].SelectedIndex + 2);
+                        exportData[j].Ability = abilitylist[Main.SpeciesStat[entry].Abilities[0]];
+                    }
+                    else if (exportData[j].HeldItem == "Shiny Stone")
+                    {
+                        pkmName += "-Snowy";
+
+                        int entry = Main.Config.Personal.GetFormIndex(trpk_pkm[j].SelectedIndex, trpk_form[j].SelectedIndex + 3);
                         exportData[j].Ability = abilitylist[Main.SpeciesStat[entry].Abilities[0]];
                     }
 
@@ -1098,8 +1150,8 @@ namespace pk3DS
                         ExportTrainerDataTxt tempETD = sets.TrPokemonList[pkmName][levelName];
                         sets.TrPokemonList[pkmName].Remove(levelName);
 
-                        sets.TrPokemonList[pkmName].Add(tempETD.Gender + " " + levelName, tempETD);
-                        sets.TrPokemonList[pkmName].Add(exportData[j].Gender + " " + levelName, exportData[j]);
+                        sets.TrPokemonList[pkmName].Add($"{tempETD.Gender} {levelName}", tempETD);
+                        sets.TrPokemonList[pkmName].Add($"{exportData[j].Gender} {levelName}", exportData[j]);
                     }
                 }
             }
@@ -1120,17 +1172,145 @@ namespace pk3DS
             if (DialogResult.Yes != WinFormsUtil.Prompt(MessageBoxButtons.YesNo, "Export Trainers for Site?"))
                 return;
 
-            Dictionary<string, ExportTrSite> trDict = new();
-            Dictionary<string, int> trainerAppearanceIndexes = new();
-            int rivalIdx = 0;
+			Dictionary<string, ExportRouteSite> routeDict = new();
 
             for (int i = 0; i < AXHelpers.AXTrainerIndexes.Length; i++)
             {
                 CB_TrainerID.SelectedIndex = AXHelpers.AXTrainerIndexes[i];
 
-                string trShortenedName = CB_TrainerID.Text.Substring(0, CB_TrainerID.Text.Length - 6);
+				if (AXHelpers.TrainerIDSkips.Contains(CB_TrainerID.SelectedIndex))
+					continue;
 
-                if (!trainerAppearanceIndexes.ContainsKey(trShortenedName))
+				string routeName = AXHelpers.TrainerIDToRoute[CB_TrainerID.SelectedIndex].Route;
+
+				string trShortenedName = CB_TrainerID.Text.Substring(0, CB_TrainerID.Text.Length - 6);
+                string trClass = Regex.Replace(CB_Trainer_Class.Text.Substring(0, CB_Trainer_Class.Text.IndexOf(" - ")), "[^a-zA-Z0-9çé& ]+", "").Trim();
+                int trClassIndex = int.Parse(CB_Trainer_Class.Text.Substring(CB_Trainer_Class.Text.IndexOf(" - ") + 3));
+
+                bool foundTag = false, skipTrainer = false;
+                string trainerName1 = "", trainerName2 = "";
+				List<ExportTrPkmSite> tagPkm = new();
+                for (int j = 0; j < AXHelpers.AXTagTrainerIndexes.Length; j++)
+                {
+                    Tuple<int, int, int> tagIndices = AXHelpers.AXTagTrainerIndexes[j];
+
+					if (routeDict.TryGetValue(routeName, out ExportRouteSite outRoute))
+					{
+						if ((CB_TrainerID.SelectedIndex == tagIndices.Item1 || CB_TrainerID.SelectedIndex == tagIndices.Item2) &&
+							outRoute.Trainers.FindIndex(t => t.TrainerID == tagIndices.Item1 || t.TrainerID == tagIndices.Item2) > -1)
+						{
+							skipTrainer = true;
+							break;
+						}
+					}
+
+					if (CB_TrainerID.SelectedIndex == tagIndices.Item1)
+                    {
+                        foundTag = true;
+                        trainerName1 = trShortenedName;
+                        int originalIndex = CB_TrainerID.SelectedIndex;
+                        CB_TrainerID.SelectedIndex = tagIndices.Item2;
+                        trainerName2 = CB_TrainerID.Text.Substring(0, CB_TrainerID.Text.Length - 6);
+
+						for (int k = 0; k < CB_numPokemon.SelectedIndex; k++)
+						{
+							ExportTrPkmSite trPkm = new()
+							{
+								Name = trpk_pkm[k].Text.Replace("’", "'"),
+								Gender = trpk_gender[k].Text == "- / Genderless/Random" ? "" : trpk_gender[k].Text,
+								Level = trpk_lvl[k].SelectedIndex,
+								Ability = trpk_abil[k].Text.Substring(0, trpk_abil[k].Text.IndexOf("(") - 1),
+								HeldItem = trpk_item[k].Text.Replace("’", "'"),
+								Nature = trpk_nature[k].Text,
+								IVs = trpk_IV[k].SelectedIndex & 0x1F
+							};
+
+							if (trPkm.HeldItem == "Megite X" ||
+								trPkm.HeldItem == "Lucarionite" ||
+								trPkm.HeldItem == "Fire Stone")
+								trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[k].Text} 1", trpk_pkm[k].SelectedIndex);
+							else if (trPkm.HeldItem == "Megite Y" ||
+									 trPkm.HeldItem == "Water Stone")
+								trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[k].Text} 2", trpk_pkm[k].SelectedIndex);
+							else if (trPkm.HeldItem == "Shiny Stone")
+								trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[k].Text} 3", trpk_pkm[k].SelectedIndex);
+							else
+								trPkm.Form = AXHelpers.GetJSONPkmName(trpk_form[k]);
+
+							trPkm.Moves[0] = trpk_m1[k].Text.Replace("’", "'");
+							trPkm.Moves[1] = trpk_m2[k].Text.Replace("’", "'");
+							trPkm.Moves[2] = trpk_m3[k].Text.Replace("’", "'");
+							trPkm.Moves[3] = trpk_m4[k].Text.Replace("’", "'");
+
+							tagPkm.Add(trPkm);
+						}
+
+                        CB_TrainerID.SelectedIndex = originalIndex;
+                    }
+                    else if (CB_TrainerID.SelectedIndex == tagIndices.Item2)
+                    {
+                        foundTag = true;
+                        trainerName2 = trShortenedName;
+                        int originalIndex = CB_TrainerID.SelectedIndex;
+                        CB_TrainerID.SelectedIndex = tagIndices.Item1;
+                        trainerName1 = CB_TrainerID.Text.Substring(0, CB_TrainerID.Text.Length - 6);
+
+						for (int k = 0; k < CB_numPokemon.SelectedIndex; k++)
+						{
+							ExportTrPkmSite trPkm = new()
+							{
+								Name = trpk_pkm[k].Text.Replace("’", "'"),
+								Gender = trpk_gender[k].Text == "- / Genderless/Random" ? "" : trpk_gender[k].Text,
+								Level = trpk_lvl[k].SelectedIndex,
+								Ability = trpk_abil[k].Text.Substring(0, trpk_abil[k].Text.IndexOf("(") - 1),
+								HeldItem = trpk_item[k].Text.Replace("’", "'"),
+								Nature = trpk_nature[k].Text,
+								IVs = trpk_IV[k].SelectedIndex & 0x1F
+							};
+
+							if (trPkm.HeldItem == "Megite X" ||
+								trPkm.HeldItem == "Lucarionite" ||
+								trPkm.HeldItem == "Fire Stone")
+								trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[k].Text} 1", trpk_pkm[k].SelectedIndex);
+							else if (trPkm.HeldItem == "Megite Y" ||
+									 trPkm.HeldItem == "Water Stone")
+								trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[k].Text} 2", trpk_pkm[k].SelectedIndex);
+							else if (trPkm.HeldItem == "Shiny Stone")
+								trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[k].Text} 3", trpk_pkm[k].SelectedIndex);
+							else
+								trPkm.Form = AXHelpers.GetJSONPkmName(trpk_form[k]);
+
+							trPkm.Moves[0] = trpk_m1[k].Text.Replace("’", "'");
+							trPkm.Moves[1] = trpk_m2[k].Text.Replace("’", "'");
+							trPkm.Moves[2] = trpk_m3[k].Text.Replace("’", "'");
+							trPkm.Moves[3] = trpk_m4[k].Text.Replace("’", "'");
+
+							tagPkm.Add(trPkm);
+						}
+
+						CB_TrainerID.SelectedIndex = originalIndex;
+                    }
+
+                    if (foundTag)
+                    {
+                        trShortenedName = $"{trainerName1} & {trainerName2}";
+                        break;
+                    }
+                }
+
+				if (skipTrainer)
+					continue;
+
+				for (int j = 0; j < AXHelpers.TrainerIDRenames.Length; j++)
+				{
+					if (AXHelpers.TrainerIDRenames[j].Item1 == CB_TrainerID.SelectedIndex)
+					{
+						trShortenedName = AXHelpers.TrainerIDRenames[j].Item2;
+						break;
+					}
+				}
+
+                /*if (!trainerAppearanceIndexes.ContainsKey(trShortenedName))
                 {
                     trainerAppearanceIndexes.Add(trShortenedName, 0);
 
@@ -1152,16 +1332,23 @@ namespace pk3DS
                         trainerAppearanceIndexes[oldShortName]++;
                     rivalIdx %= 3;
                 }
-                else
-                {
+                else if (!foundTag)
+				{
                     trShortenedName += " " + ++trainerAppearanceIndexes[trShortenedName];
-                }
+                }*/
 
                 ExportTrSite tr = new()
                 {
+					TrainerName = trShortenedName,
                     TrainerID = CB_TrainerID.SelectedIndex,
-                    TrainerClass = CB_Trainer_Class.SelectedItem.ToString(),
-                    BattleType = CB_Battle_Type.SelectedItem.ToString(),
+                    TrainerClass = trClass,
+                    TrainerClassIndex = trClassIndex,
+					BattleType = foundTag || AXHelpers.TrainerIDToRoute[CB_TrainerID.SelectedIndex].Required == "DoublesPartner" ? "Double" : CB_Battle_Type.SelectedItem.ToString(),
+					Route = routeName,
+                    EncounterIndex = AXHelpers.TrainerIDToRoute[CB_TrainerID.SelectedIndex].EncounterIndex,
+                    Required = AXHelpers.TrainerIDToRoute[CB_TrainerID.SelectedIndex].Required,
+					Notes = AXHelpers.TrainerIDToRoute[CB_TrainerID.SelectedIndex].Notes,
+					IsTagBattle = AXHelpers.TrainerIDToRoute[CB_TrainerID.SelectedIndex].IsTagBattle
                 };
 
                 for (int j = 0; j < CB_numPokemon.SelectedIndex; j++)
@@ -1169,16 +1356,27 @@ namespace pk3DS
                     ExportTrPkmSite trPkm = new()
                     {
                         Name = trpk_pkm[j].Text.Replace("’", "'"),
-                        Form = trpk_form[j].Text,
-                        Gender = trpk_gender[j].Text,
+                        Gender = trpk_gender[j].Text == "- / Genderless/Random" ? "" : trpk_gender[j].Text,
                         Level = trpk_lvl[j].SelectedIndex,
-                        Ability = trpk_abil[j].Text,
+                        Ability = trpk_abil[j].Text.Substring(0, trpk_abil[j].Text.IndexOf("(") - 1),
                         HeldItem = trpk_item[j].Text.Replace("’", "'"),
                         Nature = trpk_nature[j].Text,
                         IVs = trpk_IV[j].SelectedIndex & 0x1F
                     };
 
-                    trPkm.Moves[0] = trpk_m1[j].Text.Replace("’", "'");
+					if (trPkm.HeldItem == "Megite X" ||
+						trPkm.HeldItem == "Lucarionite" ||
+						trPkm.HeldItem == "Fire Stone")
+						trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[j].Text} 1", trpk_pkm[j].SelectedIndex);
+					else if (trPkm.HeldItem == "Megite Y" ||
+							 trPkm.HeldItem == "Water Stone")
+						trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[j].Text} 2", trpk_pkm[j].SelectedIndex);
+					else if (trPkm.HeldItem == "Shiny Stone")
+						trPkm.Form = AXHelpers.GetJSONPkmName($"{trpk_form[j].Text} 3", trpk_pkm[j].SelectedIndex);
+					else
+						trPkm.Form = AXHelpers.GetJSONPkmName(trpk_form[j]);
+
+					trPkm.Moves[0] = trpk_m1[j].Text.Replace("’", "'");
                     trPkm.Moves[1] = trpk_m2[j].Text.Replace("’", "'");
                     trPkm.Moves[2] = trpk_m3[j].Text.Replace("’", "'");
                     trPkm.Moves[3] = trpk_m4[j].Text.Replace("’", "'");
@@ -1186,7 +1384,22 @@ namespace pk3DS
                     tr.Pokemon.Add(trPkm);
                 }
 
-                trDict.Add(trShortenedName, tr);
+				tr.Pokemon.AddRange(tagPkm);
+
+				ExportRouteSite route = new()
+				{
+					RouteIndex	= AXHelpers.RouteMappings[tr.Route].RouteIndex,
+					Required =	AXHelpers.RouteMappings[tr.Route].Required,
+					Notes =		AXHelpers.RouteMappings[tr.Route].Notes,
+				};
+
+				route.Trainers.Add(tr);
+
+                if (!routeDict.TryAdd(tr.Route, route))
+				{
+					routeDict[tr.Route].Trainers.Add(tr);
+					routeDict[tr.Route].Trainers.Sort((x, y) => x.EncounterIndex.CompareTo(y.EncounterIndex));
+				}
             }
 
             SaveFileDialog sfd = new() { FileName = "trainers.json", Filter = "JSON|*.json" };
@@ -1195,10 +1408,19 @@ namespace pk3DS
             if (sfd.ShowDialog() == DialogResult.OK)
             {
                 string path = sfd.FileName;
-                string json = JsonSerializer.Serialize(trDict);
+                string json = JsonSerializer.Serialize(routeDict);
                 File.WriteAllText(path, json);
             }
         }
+
+		private void AddPkm()
+		{
+
+		}
+
+		//---------------------------
+		// NATURE FUNCS
+		//---------------------------
 
         private NatureViewer NatureViewer;
 

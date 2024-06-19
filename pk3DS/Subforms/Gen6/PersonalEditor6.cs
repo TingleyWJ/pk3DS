@@ -526,14 +526,7 @@ namespace pk3DS
             {
                 CB_Species.SelectedIndex = i;
 
-                string pkmName = ((string)CB_Species.SelectedItem).Substring(0, ((string)CB_Species.SelectedItem).Length - 6);
-
-                if (AXHelpers.AXPokemonFormNames.ContainsKey(pkmName))
-                {
-                    pkmName = AXHelpers.AXPokemonFormNames[pkmName];
-                }
-                else if (pkmName.Substring(pkmName.Length - 1) == "1")
-                    pkmName = pkmName.Substring(0, pkmName.Length - 2) + "-Mega";
+                string pkmName = AXHelpers.GetJSONPkmName(CB_Species, true);
 
                 ExportPokemonTxt ep = new()
                 {
@@ -599,12 +592,14 @@ namespace pk3DS
                         { "SpD", int.Parse(TB_BaseSPD.Text) },
                         { "Spe", int.Parse(TB_BaseSPE.Text) }
                     },
+                    HeldItem = CB_HeldItem1.Text != "" ? CB_HeldItem1.Text : null,
                     CatchRate = int.Parse(TB_CatchRate.Text),
                     BaseXP = int.Parse(TB_BaseExp.Text),
                     GrowthRate = CB_EXPGroup.Text
                 };
 
                 for (int j = 0; j < CLB_TMHM.Items.Count; j++)
+                {
                     if (CLB_TMHM.GetItemChecked(j))
                     {
                         string tmString = CLB_TMHM.Items[j].ToString();
@@ -612,11 +607,13 @@ namespace pk3DS
                         {
                             Label = tmString.Substring(0, tmString.IndexOf(" ")),
                             Move = tmString.Substring(tmString.IndexOf(" ") + 1).Replace("’", "'")
-                    };
+                        };
 
                         pkm.TMs.Add(tm);
                     }
+                }
                 for (int j = 0; j < CLB_MoveTutors.Items.Count; j++)
+                {
                     if (CLB_MoveTutors.GetItemChecked(j))
                     {
                         string tmString = CLB_MoveTutors.Items[j].ToString();
@@ -624,10 +621,11 @@ namespace pk3DS
                         {
                             Label = "Tutor",
                             Move = tmString.Replace("’", "'")
-                    };
+                        };
 
                         pkm.TMs.Add(tm);
                     }
+                }
 
                 pkmDict.Add(pkmName, pkm);
             }

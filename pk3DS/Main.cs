@@ -1064,8 +1064,8 @@ namespace pk3DS
                     case 6:
                         // This is for pkHeX input
                         // TODO Create a more fleshed out guide to updating pkHeX (not too hard)
-                        //var test = Mini.PackMini(d, "ax");
-                        //File.WriteAllBytes("test.pkl", test);
+                        //var axMoveList = Mini.PackMini(d, "ax");
+                        //File.WriteAllBytes("lvlmove_ax.pkl", axMoveList);
                         Invoke((Action)(() => new LevelUpEditor6(d).ShowDialog()));
                         break;
                     case 7:

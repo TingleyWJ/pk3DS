@@ -13,17 +13,43 @@ namespace pk3DS.Core.Structures.AXExports
         [JsonPropertyName("category")]
         public string Category { get; set; }
 
+        [JsonPropertyName("drain"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int[] Drain { get; set; }
         [JsonPropertyName("multihit"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int[] Multihit { get; set; }
+        [JsonPropertyName("recoil"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int[] Recoil { get; set; }
 
-        public ExportMoveTxt(string t, int bp, string cat, int[] mh)
+        [JsonPropertyName("priority"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public int Priority { get; set; }
+
+        [JsonPropertyName("makesContact"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public bool MakesContact { get; set; }
+        [JsonPropertyName("secondaries"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public bool Secondaries { get; set; }
+
+        public ExportMoveTxt(string type, int basePower, string category,
+                             int[] drain, int[] multihit, int[] recoil,
+                             int priority, bool makesContact, bool secondaries)
         {
-            Type = t;
-            BasePower = bp;
-            Category = cat;
+            Type = type;
+            BasePower = basePower;
+            Category = category;
+
+            Drain = null;
             Multihit = null;
-            if (mh[0] != 0 || mh[1] != 0)
-                Multihit = mh;
+            Recoil = null;
+
+            Priority = priority;
+            MakesContact = makesContact;
+            Secondaries = secondaries;
+
+            if (drain[0] != 0)
+                Drain = drain;
+            if (multihit[0] != 0 || multihit[1] != 0)
+                Multihit = multihit;
+            if (recoil[0] != 0)
+                Recoil = recoil;
         }
     }
 

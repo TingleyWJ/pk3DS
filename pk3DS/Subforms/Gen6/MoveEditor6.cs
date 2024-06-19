@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.IO;
 using pk3DS.Core.Structures.AXExports;
 using System.Collections.Generic;
+using pk3DS.Core.MathHelper;
 
 namespace pk3DS
 {
@@ -253,13 +254,45 @@ namespace pk3DS
             {
                 CB_Move.SelectedIndex = i;
 
-                string name = (string)CB_Move.SelectedItem;
+                string name = ((string)CB_Move.SelectedItem).Replace("’", "'");
                 string type = (string)CB_Type.SelectedItem;
                 int basePower = (int)NUD_Power.Value;
                 string category = (string)CB_Category.SelectedItem;
+
                 int[] multihit = new int[2] { (int)NUD_HitMin.Value, (int)NUD_HitMax.Value };
 
-                moveList.MoveList.Add(name, new ExportMoveTxt(type, basePower, category, multihit));
+
+                int[] drain, recoil;
+                float recoilVal = (float)NUD_Recoil.Value;
+                if (recoilVal > 0)
+                {
+                    drain = MathHelper.FloatToFraction(recoilVal == 33 ? 1 / 3f : recoilVal / 100);
+                    recoil = new int[2];
+                }
+                else
+                {
+                    recoilVal *= -1;
+
+                    drain = new int[2];
+                    recoil = MathHelper.FloatToFraction(recoilVal == 33 ? 1 / 3f : recoilVal / 100);
+                }
+
+                int priority = (int)NUD_Priority.Value;
+                bool makesContact = CLB_Flags.CheckedIndices.Contains(0);
+                bool secondaries = false;
+
+                if (category != "Status" &&
+                    (CB_Quality.SelectedIndex == 4 ||
+                     NUD_Flinch.Value > 0 ||
+                     (CB_Quality.SelectedIndex == 6 &&
+                      NUD_Stat1.Value < 0) ||
+                     (CB_Quality.SelectedIndex == 7 &&
+                      NUD_Stat1.Value > 0)))
+                    secondaries = true;
+
+                moveList.MoveList.Add(name, new ExportMoveTxt(type, basePower, category,
+                                                              drain, multihit, recoil,
+                                                              priority, makesContact, secondaries));
             }
 
             SaveFileDialog sfd = new() { FileName = "Moves - Showdown Calc.json", Filter = "JSON|*.json" };
