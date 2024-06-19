@@ -24,6 +24,8 @@ namespace pk3DS
 
             specieslist[0] = movelist[0] = itemlist[0] = "";
             Array.Resize(ref specieslist, Main.Config.MaxSpeciesID + 1);
+            string[][] AltForms = Main.Config.Personal.GetFormList(specieslist, Main.Config.MaxSpeciesID);
+            specieslist = Main.Config.Personal.GetPersonalEntryList(AltForms, specieslist, Main.Config.MaxSpeciesID, out baseForms, out formVal);
 
             string[] evolutionMethods =
             {
@@ -90,6 +92,7 @@ namespace pk3DS
         private readonly string[] itemlist = Main.Config.GetText(TextName.ItemNames);
         private readonly string[] typelist = Main.Config.GetText(TextName.Types);
         private bool dumping;
+        private readonly int[] baseForms, formVal;
         private EvolutionSet evo = new EvolutionSet6(new byte[EvolutionSet6.SIZE]);
 
         private void GetList()
