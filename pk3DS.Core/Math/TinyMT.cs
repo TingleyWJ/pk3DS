@@ -34,105 +34,104 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-namespace TinyMT
+namespace TinyMT;
+
+public class TinyMT32
 {
-    public class TinyMT32
+    private const uint MAT1_DEFAULT_32 = 0x8F7011EE;
+    private const uint MAT2_DEFAULT_32 = 0xFC78FF1F;
+    private const uint TMAT_DEFAULT_32 = 0x3793FDFF;
+
+    private const int TINYMT32_MASK = 0x7FFFFFFF;
+    private const int TINYMT32_SH0 = 1;
+    private const int TINYMT32_SH1 = 10;
+    private const int TINYMT32_SH8 = 8;
+    private const int MIN_LOOP = 8;
+    private const int PRE_LOOP = 8;
+
+    private readonly uint mat1;
+    private readonly uint mat2;
+    private readonly uint tMat;
+
+    private uint[] status = new uint[4];
+
+    public TinyMT32(uint seed, uint mat1 = MAT1_DEFAULT_32, uint mat2 = MAT2_DEFAULT_32, uint tMat = TMAT_DEFAULT_32)
     {
-        private const uint MAT1_DEFAULT_32 = 0x8F7011EE;
-        private const uint MAT2_DEFAULT_32 = 0xFC78FF1F;
-        private const uint TMAT_DEFAULT_32 = 0x3793FDFF;
+        this.mat1 = mat1;
+        this.mat2 = mat2;
+        this.tMat = tMat;
 
-        private const int TINYMT32_MASK = 0x7FFFFFFF;
-        private const int TINYMT32_SH0 = 1;
-        private const int TINYMT32_SH1 = 10;
-        private const int TINYMT32_SH8 = 8;
-        private const int MIN_LOOP = 8;
-        private const int PRE_LOOP = 8;
+        Init(seed);
+    }
 
-        private readonly uint mat1;
-        private readonly uint mat2;
-        private readonly uint tMat;
+    private void Init(uint seed)
+    {
+        status = [seed, mat1, mat2, tMat];
 
-        private uint[] status = new uint[4];
-
-        public TinyMT32(uint seed, uint mat1 = MAT1_DEFAULT_32, uint mat2 = MAT2_DEFAULT_32, uint tMat = TMAT_DEFAULT_32)
+        for (int i = 1; i < MIN_LOOP;  i++)
         {
-            this.mat1 = mat1;
-            this.mat2 = mat2;
-            this.tMat = tMat;
-
-            Init(seed);
+            int s = (int)(status[(i - 1) & 3] ^ (status[(i - 1) & 3] >>> 30));
+            status[i & 3] ^= (uint)((((s >>> 16) * 0x6C078965) << 16) + (s & 0xFFFF) * 0x6C078965 + i);
         }
 
-        private void Init(uint seed)
-        {
-            status = new uint[] { seed, mat1, mat2, tMat };
+        PeriodCertification();
 
-            for (int i = 1; i < MIN_LOOP;  i++)
-            {
-                int s = (int)(status[(i - 1) & 3] ^ (status[(i - 1) & 3] >>> 30));
-                status[i & 3] ^= (uint)((((s >>> 16) * 0x6C078965) << 16) + (s & 0xFFFF) * 0x6C078965 + i);
-            }
-
-            PeriodCertification();
-
-            for (int i = 0; i < PRE_LOOP; i++)
-            {
-                NextState();
-            }
-        }
-
-        private void PeriodCertification()
-        {
-            if (status[0] == TINYMT32_MASK && status[1] == 0 && status[2] == 0 && status[3] == 0)
-                status = new uint[] { TINYMT32_MASK, TINYMT32_MASK, TINYMT32_MASK, TINYMT32_MASK };
-        }
-
-        private void NextState()
-        {
-            //uint y = status[3];
-            int x = (int)((status[0] & TINYMT32_MASK) ^ status[1] ^ status[2]);
-            int y;
-
-            x ^= x << TINYMT32_SH0;
-            y = (int)(status[3] ^ ((status[3] >>> TINYMT32_SH0) ^ x));
-
-            status[0] = status[1];
-            status[1] = status[2];
-            status[2] = (uint)(x ^ (y << TINYMT32_SH1));
-            status[3] = (uint)y;
-
-            if ((y & 1) == 1)
-            {
-                status[1] ^= mat1;
-                status[2] ^= mat2;
-            }
-        }
-
-        private uint Temper()
-        {
-            uint t0 = status[3];
-            uint t1 = status[0] + (status[2] >>> TINYMT32_SH8);
-
-            int t0_int = (int)(t0 ^ t1);
-
-            if ((t1 & 1) == 1)
-            {
-                t0_int = (int)(t0_int ^ tMat);
-            }
-
-            return (uint)(t0_int);
-        }
-
-        public void Reseed(uint seed)
-        {
-            Init(seed);
-        }
-
-        public uint GetNextUInt32()
+        for (int i = 0; i < PRE_LOOP; i++)
         {
             NextState();
-            return Temper();
         }
+    }
+
+    private void PeriodCertification()
+    {
+        if (status[0] == TINYMT32_MASK && status[1] == 0 && status[2] == 0 && status[3] == 0)
+            status = [TINYMT32_MASK, TINYMT32_MASK, TINYMT32_MASK, TINYMT32_MASK];
+    }
+
+    private void NextState()
+    {
+        //uint y = status[3];
+        int x = (int)((status[0] & TINYMT32_MASK) ^ status[1] ^ status[2]);
+        int y;
+
+        x ^= x << TINYMT32_SH0;
+        y = (int)(status[3] ^ ((status[3] >>> TINYMT32_SH0) ^ x));
+
+        status[0] = status[1];
+        status[1] = status[2];
+        status[2] = (uint)(x ^ (y << TINYMT32_SH1));
+        status[3] = (uint)y;
+
+        if ((y & 1) == 1)
+        {
+            status[1] ^= mat1;
+            status[2] ^= mat2;
+        }
+    }
+
+    private uint Temper()
+    {
+        uint t0 = status[3];
+        uint t1 = status[0] + (status[2] >>> TINYMT32_SH8);
+
+        int t0_int = (int)(t0 ^ t1);
+
+        if ((t1 & 1) == 1)
+        {
+            t0_int = (int)(t0_int ^ tMat);
+        }
+
+        return (uint)(t0_int);
+    }
+
+    public void Reseed(uint seed)
+    {
+        Init(seed);
+    }
+
+    public uint GetNextUInt32()
+    {
+        NextState();
+        return Temper();
     }
 }
