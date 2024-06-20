@@ -1,48 +1,49 @@
 ﻿using System;
 
-namespace pk3DS.Core.Structures
+namespace pk3DS.Core.Structures;
+
+[Flags]
+public enum BattleStatusFlags : byte
 {
-    [Flags]
-    public enum BattleStatusFlags : byte
-    {
-        /// <summary>
-        /// Sleep
-        /// </summary>
-        SLP = 1 << 0,
+    None = 0,
 
-        /// <summary>
-        /// Poison
-        /// </summary>
-        PSN = 1 << 1,
+    /// <summary>
+    /// Sleep
+    /// </summary>
+    SLP = 1 << 0,
 
-        /// <summary>
-        /// Burn
-        /// </summary>
-        BRN = 1 << 2,
+    /// <summary>
+    /// Poison
+    /// </summary>
+    PSN = 1 << 1,
 
-        /// <summary>
-        /// Freeze
-        /// </summary>
-        FRZ = 1 << 3,
+    /// <summary>
+    /// Burn
+    /// </summary>
+    BRN = 1 << 2,
 
-        /// <summary>
-        /// Paralysis
-        /// </summary>
-        PAR = 1 << 4,
+    /// <summary>
+    /// Freeze
+    /// </summary>
+    FRZ = 1 << 3,
 
-        /// <summary>
-        /// Confusion
-        /// </summary>
-        CFZ = 1 << 5,
+    /// <summary>
+    /// Paralysis
+    /// </summary>
+    PAR = 1 << 4,
 
-        /// <summary>
-        /// Infatuation
-        /// </summary>
-        INF = 1 << 6,
+    /// <summary>
+    /// Confusion
+    /// </summary>
+    CFZ = 1 << 5,
 
-        /// <summary>
-        /// Guard Spec.
-        /// </summary>
-        GSP = 1 << 7,
-    }
+    /// <summary>
+    /// Infatuation
+    /// </summary>
+    INF = 1 << 6,
+
+    /// <summary>
+    /// Guard Spec.
+    /// </summary>
+    GSP = 1 << 7,
 }
