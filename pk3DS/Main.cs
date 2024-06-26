@@ -755,44 +755,6 @@ namespace pk3DS
             {
                 byte[][] d = Config.GARCPersonal.Files;
 
-                // Don't uncomment any of the below code unless you know exactly what you're doing.
-
-                //Add new pokemon to pokemon info list
-                /*byte[][] d2 = new byte[d.Length + 1][];
-                for (int i = 0; i < d2.Length - 1; i++)
-                {
-                    d2[i] = d[i];
-                }
-                //The details for mega rayquaza
-                string s = "69 B4 64 73 B4 64 0F 02 2D 03 08 01 00 00 00 00 00 00 FF 78 00 05 0F 0F 01 01 01 00 00 00 00 00 02 03 5F 01 38 04 50 0F B3 76 B3 C7 F4 8A 9B 06 49 B7 C2 22 E8 07 00 00 C0 00 00 00 2F 01 02 00";
-                string[] s2 = s.Split(' ');
-                //Console.WriteLine($"s2 result: {string.Join(", ", s2)}");
-                d2[d2.Length - 2] = s2.Select(x => Convert.ToByte(x, 16)).ToArray();
-                //Console.WriteLine($"s output: {BitConverter.ToString(d2[d2.Length - 2])}");
-                d2[d2.Length - 1] = d2.Where(x => x != null).SelectMany(x => x).ToArray();
-
-                Config.GARCPersonal.FileCount = d.Length + 1;
-                Config.GARCPersonal.Files = d2;
-                Config.GARCPersonal.Save();
-                d = Config.GARCPersonal.Files;
-                
-                System.Diagnostics.Debug.WriteLine($"Pokemon[{d.Length - 2}]: {BitConverter.ToString(d[d.Length - 2])}");*/
-
-                /*for (int i = 0; i < d.Length; i++)
-                {
-                    Console.WriteLine($"Pokemon[{i}]: {BitConverter.ToString(d[i])}");
-                }
-                for (int i = 0; i < d2.Length; i++)
-                {
-                    Console.WriteLine($"Pokemon2[{i}]: {BitConverter.ToString(d2[i])}");
-                }
-
-                //For just printing out the personal list
-                for (int i = 0; i < d.Length; i++)
-                {
-                    Console.WriteLine($"Pokemon[{i}]: {BitConverter.ToString(d[i])}");
-                }*/
-
                 switch (Config.Generation)
                 {
                     case 6:

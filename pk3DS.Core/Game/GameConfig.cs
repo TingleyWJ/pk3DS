@@ -75,8 +75,6 @@ namespace pk3DS.Core
                     Files = GARCReference.GARCReference_XY;
                     Variables = TextVariableCode.VariableCodes_XY;
                     GameText = TextReference.GameText_XY;
-                    //set model pointer data length automatically
-                    //model_pointer_data_Length = 0xB48;
                     break;
 
                 case GameVersion.ORASDEMO:
@@ -84,8 +82,6 @@ namespace pk3DS.Core
                     Files = GARCReference.GARCReference_AO;
                     Variables = TextVariableCode.VariableCodes_AO;
                     GameText = TextReference.GameText_AO;
-                    //same for ORAS
-                    //model_pointer_data_Length = 0xB48;
                     break;
 
                 case GameVersion.SMDEMO:
@@ -110,8 +106,6 @@ namespace pk3DS.Core
                         Files = GARCReference.GARCReference_UM;
                     Variables = TextVariableCode.VariableCodes_SM;
                     GameText = TextReference.GameText_USUM;
-                    //USUM different than SM because new Pokemon, not just new Formes
-                    //model_pointer_data_Length = 0xCA0;
                     break;
             }
         }
@@ -134,133 +128,7 @@ namespace pk3DS.Core
             InitializeEvos();
             InitializeGameInfo();
 
-            //initialize array to stick read index numbers in
-            //string[] new_model_base_forme_indices_text = Array.Empty<string>();
-            //int[] new_model_base_forme_indices = Array.Empty<int>();
-
-            //text file names "changed_indices.txt" in the same directory as the built .exe
-            //var base_indices_path = Path.Combine(Directory.GetCurrentDirectory(), "changed_indices.txt");
-
-            //to skip everything below if file not found or file empty
-            //bool no_indices = false;
-            
-            //checks if file with list of indices exists
-            /*if (File.Exists(base_indices_path))
-            {
-                //try to read the file
-                try
-                {
-                    //grabs each line as a string (so put each index you want to change on a different line)
-                    new_model_base_forme_indices_text = File.ReadAllLines(base_indices_path);
-                }
-                catch
-                {
-                    no_indices = true;
-                }
-            }
-
-            if (!no_indices)
-            {
-                //Convert strings read from file into integers
-                new_model_base_forme_indices = Array.ConvertAll(new_model_base_forme_indices_text, int.Parse);
-
-                //Do the edits for each index number. This implementation is MUCH less computation-efficient than doing loops inside EditModelMasterTable,
-                //but it's not a lot and I don't understand what it's doing well enough to willingly much around with it.
-                foreach (var item in new_model_base_forme_indices)
-                {
-                    EditModelMasterTable(item);
-                }
-            }*/
         }
-        /*
-        public void EditModelMasterTable(int pokemonIndex)
-        {
-            GARCFile ModelFile = GetGARCData("models");
-            byte[] MasterTable = ModelFile.Files[0];
-
-
-            byte[] LimitedMT = new byte[model_pointer_data_Length];
-            Array.Copy(MasterTable, 0, LimitedMT, 0, model_pointer_data_Length);
-            //Console.WriteLine($"{BitConverter.ToString(MasterTable)}");
-            int size = 0x4;
-            byte[][] splitTable = PersonalTable.SplitBytes(LimitedMT, size);
-
-           // for (int i = 0; i < splitTable.Length; i++)
-           // {
-                Console.WriteLine($"Model[{i}]: {BitConverter.ToString(splitTable[i])}");
-          //  }
-
-            //edit pokemon's counts
-            int modelIndex = -1;
-            //form count, just do a plus-equal, for now just run Pokemon with more than 1 forme added through a second time. This avoids one set of accidental problems by substituting another (over-adding)
-            splitTable[pokemonIndex - 1][2] += 0x1;
-            //identifier, 0x1 = no extra forms, 0x3 = gender forms, 0x5 = non-gender forms, 0x7 = both gender and non-gender forms
-            //If splitTable[pokemonIndex - 1][3] is at least 0x5, it is already where we want, so don't modify. Otherwise it is 0x1 or 0x3, and we want to add 0x4 to get to 0x5 or 0x7, respectively.
-            if (splitTable[pokemonIndex - 1][3] < 0x5)
-            {
-                splitTable[pokemonIndex - 1][3] += 0x04;
-            }
-
-            int modelCount = 0;
-            for (int i = 0; i < splitTable.Length; i++)
-            {
-                if (i == pokemonIndex - 1)
-                {
-                    modelIndex = modelCount;
-                }
-                splitTable[i][0] = (byte)modelCount;
-                splitTable[i][1] = (byte)(modelCount >> 8);
-                modelCount += splitTable[i][2];
-            }
-
-            //for (int i = 0; i < splitTable.Length; i++)
-           // {
-                Console.WriteLine($"Model[{i}]: {BitConverter.ToString(splitTable[i])}");
-           // }
-
-            LimitedMT = splitTable.SelectMany(x => x).ToArray();
-            Array.Copy(LimitedMT, 0, MasterTable, 0, model_pointer_data_Length);
-
-            //Console.WriteLine($"modelcount: {modelCount}, mc * 2 - 2: {modelCount * 2 - 2}");
-            byte[] backhalfMT = new byte[modelCount * 2 - 2];
-            Array.Copy(MasterTable, model_pointer_data_Length, backhalfMT, 0, modelCount * 2 - 2);
-            //int backSize = 0x2;
-            //byte[][] splitBack = PersonalTable.SplitBytes(backhalfMT, backSize);
-
-            byte[] rewriteBackMT = new byte[modelCount * 2];
-            for (int i = 0, j = 0; i < modelCount * 2; i += 2, j += 2)
-            {
-                if (i / 2 == modelIndex)
-                {
-                    //this first byte would be 0x1 if its a female model
-                    //this doesn't apply here because we're only adding 2 bytes for megas and they're just set as 00 00
-                    //if you want to find the 2 bytes, use B48 + (2 * modelCount) at the index of your pokemon
-                    rewriteBackMT[i] = 0x0;
-                    rewriteBackMT[i + 1] = 0x0;
-                    j -= 2;
-                }
-                else
-                {
-                    rewriteBackMT[i] = backhalfMT[j];
-                    rewriteBackMT[i + 1] = backhalfMT[j + 1];
-                }
-            }
-            //Console.WriteLine($"First: {BitConverter.ToString(backhalfMT)}");
-            //Console.WriteLine($"Rewrt: {BitConverter.ToString(rewriteBackMT)}");
-
-            Array.Resize(ref MasterTable, model_pointer_data_Length + modelCount * 2);
-            Array.Copy(rewriteBackMT, 0, MasterTable, model_pointer_data_Length, modelCount * 2);
-
-            //Console.WriteLine($"Full Table: {BitConverter.ToString(MasterTable)}");
-
-            byte[][] modelReplace = ModelFile.Files;
-            modelReplace[0] = MasterTable;
-            ModelFile.Files = modelReplace;
-
-            //Console.WriteLine($"Full Table Again: {BitConverter.ToString(ModelFile.Files[0])}");
-            ModelFile.Save();
-        }
-        */
         public void InitializePersonal()
         {
             GARCPersonal = GetGARCData("personal");
