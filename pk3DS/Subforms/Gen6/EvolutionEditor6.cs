@@ -24,8 +24,8 @@ namespace pk3DS
 
             specieslist[0] = movelist[0] = itemlist[0] = "";
             Array.Resize(ref specieslist, Main.Config.MaxSpeciesID + 1);
-            string[][] AltForms = Main.Config.Personal.GetFormList(specieslist, Main.Config.MaxSpeciesID);
-            specieslist = Main.Config.Personal.GetPersonalEntryList(AltForms, specieslist, Main.Config.MaxSpeciesID, out baseForms, out formVal);
+            string[][] AltForms = Main.Config.Personal.GetFormList(specieslist, Main.Config.MaxSpeciesID); // Include all forms, not just base form
+            specieslist = Main.Config.Personal.GetPersonalEntryList(AltForms, specieslist, Main.Config.MaxSpeciesID, out baseForms, out formVal); // baseForms and formVal added as int on line 95
 
             string[] evolutionMethods =
             {
